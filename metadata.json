@@ -1,0 +1,7 @@
+{
+  "name": "Copy of Final OSM Service Intern-1",
+  "description": "An intelligent chatbot that reads troubleshooting data from a provided sheet and offers step-by-step solutions for OSM service interns in the field. Admins can load a knowledge base, and interns can query it using natural language.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
