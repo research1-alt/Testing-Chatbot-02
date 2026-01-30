@@ -1116,21 +1116,44 @@ const hardwareSpecsContent = `
 
 ## 1. Battery Make & Specifications
 ### Exicom Battery
-- Capacity: 10.75 KWH / 210ah
-- Operating Range: 47V - 54V
+- Make & Trade Name - Exicom Energy Systems Pvt. Ltd.
+- Model No - 2040506
+- Weight - 90 KG
+- Cell Configuration in Pack - 16S 2P
+- Module Configuration in Pack - NA
+- Capacity: 10.75 KWH / 210 Ah
+- Operating Range: 46 V to 58.4 V
+- KSI Voltage: 52V
 - Nominal Voltage: 51.2V
-- KSI Voltage: 48V
+- BMS Make - Exicom
+
+
+
 
 ### Exponent Battery
+- Make & Trade Name - Exponent Energy E- Pack
+- Model No - E-Pack 5188 - TG1
+- Weight - 104 KG
+- Cell Configuration in Pack - Module to Pack
+- Module Configuration in Pack - 8s Module, 2 Module in Series, 2 Modules in parallel
 - Capacity: 8.8 KWH / 172ah
-- Operating Range: 47V - 54V
-- KSI Voltage: 5V (Drops to 2.5V-3V when connected)
+- Operating Range: 47.2V - 58V
+- KSI Voltage: 5V (Drops to 2.5V-3V when KSI connected)
 - Nominal Voltage: 51.2V
+- BMS Make - Exponent Energy
+
+
 
 ### Clean Battery
-- Capacity: 15.1 KWH / 314ah
-- Operating Range: 43.5V - 54V
-- Nominal Voltage: 48V
+- Make & Trade Name - RTCXFC Industries Pvt Ltd 
+- Model No - FLO 150 
+- Weight - 120 KG
+- Cell Configuration in Pack - 15S 1P 
+- Module Configuration in Pack - NA
+- Capacity: 15.1 KWH / 314Ah
+- Operating Range: 43.5V to 54.75V
+- Nominal Voltage:  48V 
+- BMS Make - RTCXFC Industries Pvt Ltd 
 
 ## 2. CAN Bus Termination Logic
 - **120 Ohm Termination:** Available in Cluster and MCU.
