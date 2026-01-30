@@ -43,43 +43,51 @@ export async function getChatbotResponse(
   try {
     const ai = new GoogleGenAI({ apiKey });
     
-    const systemInstruction = `CRITICAL OPERATIONAL PROTOCOL:
-1. RESPONSE LANGUAGE: YOU MUST RESPOND EXCLUSIVELY IN ${targetLanguageName.toUpperCase()}.
-2. STEP-BY-STEP FORMATTING: FOR ALL TECHNICAL PROCEDURES, DIAGNOSTICS, OR TROUBLESHOOTING, YOU MUST USE THE TAGS [STEP 1], [STEP 2], [STEP 3], ETC. DO NOT USE STANDARD BULLET POINTS OR NUMBERED LISTS (1., 2.) FOR PROCEDURES. 
-   - CORRECT: "[STEP 1] Check voltage..."
-   - INCORRECT: "1. Check voltage..."
-3. PERSONA: You are "OSM Mentor", an expert technical AI for Omega Seiki Mobility.
-4. INITIAL SELECTION: If the user provides a Power Train name (e.g. "Matel Power Train (12V)"), ONLY confirm readiness. "System selected: [Name]. I am ready for your query."
+    const systemInstruction = `CRITICAL OPERATIONAL PROTOCOL FOR "OSM MENTOR":
+1. LANGUAGE: RESPOND ONLY IN ${targetLanguageName.toUpperCase()}. 
+   - Translate all explanations, headers, and descriptions.
+   - Use English ONLY for technical identifiers (MCU, Pin, Ohm, V, A, KSI, Err-XX, CAN).
 
-DATA ACCESS:
-- POWER TRAINS: Matel (12V), Virya Gen 1 Old (48V), Virya Gen 1 AIS 156, Virya Gen 2.
-- ERROR CODES: Full library Err-01 to Err-60 with troubleshooting steps.
-- HARDWARE: Battery specs (Exicom, Exponent, Clean), CAN termination logic, Cluster types.
+2. RESPONSE STYLE CATEGORIES:
+   A. SPECIFICATION QUERIES: If the user asks for technical data, parameters, specifications, battery details, or pinouts (e.g., "Give me Exicom battery details" or "Matel MCU pin position"):
+      - PROVIDE THE DATA EXACTLY AS IT APPEARS in the context.
+      - Use a clear, tabular or structured list format.
+      - Do NOT use [STEP X] formatting for pure data dumps.
+   
+   B. DIAGNOSTIC/TROUBLESHOOTING QUERIES: If the user asks "How to check", "How to fix", "How to clear", "Troubleshoot", or provides an Error Code (e.g., "How to check MCU relay" or "Err-31 resolution"):
+      - PROVIDE A DIAGNOSTIC MANUAL STYLE ANSWER.
+      - YOU MUST USE THE [STEP 1], [STEP 2], [STEP 3] FORMATTING.
+      - This is mandatory for procedural guidance.
 
-STRICT FORMATTING RULE: Every single procedural instruction must begin with [STEP X]. This is mandatory for the UI to render correctly.`;
+3. PERSONA: You are a high-precision technical intelligence for Omega Seiki Mobility service technicians. Be direct, factual, and helpful.
+
+4. SELECTION LOGIC: If the user selects a system name (e.g., "Matel Power Train (12V)"), confirm selection in ${targetLanguageName} and wait for the query.
+
+STRICT UI COMPLIANCE: The frontend parser uses [STEP X] markers to build visual timelines. Use them for all "How-to" procedures. Use temperature 0 for total consistency across Vercel and local deployments.`;
 
     const fullPrompt = `TARGET LANGUAGE: ${targetLanguageName}
 
-KNOWLEDGE BASE CONTEXT:
-${context || "No context provided."}
+KNOWLEDGE BASE:
+${context || "No technical modules available."}
 
 CONVERSATION HISTORY:
 ${chatHistory}
 
 TECHNICIAN QUERY: "${query}"
 
-MANDATORY INSTRUCTION: 
-If the query requires a multi-step solution or troubleshooting guide, you MUST format it using [STEP 1], [STEP 2], etc.
-Respond ONLY in ${targetLanguageName}.`;
+MANDATORY FINAL CHECK:
+- Is the query asking for a data specification? If yes, provide data as is.
+- Is the query asking for a process or fix? If yes, use [STEP X] format.
+- IS THE ENTIRE ANSWER IN ${targetLanguageName.toUpperCase()}? (YES)`;
   
     const result = await ai.models.generateContent({
         model: 'gemini-3-flash-preview', 
         contents: [{ parts: [{ text: fullPrompt }] }],
         config: {
             systemInstruction,
-            temperature: 0.1,
-            topP: 0.8,
-            topK: 40,
+            temperature: 0.0, 
+            topP: 0.1,
+            topK: 1,
             seed: 42,
             responseMimeType: "application/json",
             responseSchema: {
@@ -87,12 +95,12 @@ Respond ONLY in ${targetLanguageName}.`;
                 properties: {
                     answer: { 
                         type: Type.STRING, 
-                        description: `The detailed response in ${targetLanguageName}. Procedures MUST use [STEP 1], [STEP 2] markers.` 
+                        description: `Technical response in ${targetLanguageName}. Use [STEP X] for procedures, structured list for specifications.` 
                     },
                     suggestions: { 
                         type: Type.ARRAY, 
                         items: { type: Type.STRING },
-                        description: `Follow-up suggestions in ${targetLanguageName}.`
+                        description: `Three follow-up suggestions in ${targetLanguageName}.`
                     },
                     isUnclear: { type: Type.BOOLEAN }
                 },
@@ -104,15 +112,15 @@ Respond ONLY in ${targetLanguageName}.`;
     const responseText = result.text || "";
     const startIdx = responseText.indexOf('{');
     const endIdx = responseText.lastIndexOf('}') + 1;
-    if (startIdx === -1) throw new Error("Invalid response format");
+    if (startIdx === -1) throw new Error("AI generated non-JSON content");
     const cleanJson = responseText.substring(startIdx, endIdx);
     
     return JSON.parse(cleanJson) as GeminiResponse;
 
   } catch (error: any) {
-    console.error("OSM AI Failure:", error);
+    console.error("OSM AI ERROR:", error);
     return {
-        answer: "System Error. Please verify connection.",
+        answer: "Connection failed. Please check Vercel environment variables or internet connection.",
         suggestions: ["Retry"],
         isUnclear: true
     };
@@ -139,7 +147,7 @@ export async function generateSpeech(text: string, language: string): Promise<st
 
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash-preview-tts',
-            contents: [{ parts: [{ text: `Speak in ${targetLanguageName}: ${cleanText}` }] }],
+            contents: [{ parts: [{ text: `Read in ${targetLanguageName}: ${cleanText}` }] }],
             config: {
                 responseModalities: [Modality.AUDIO],
                 speechConfig: { 
