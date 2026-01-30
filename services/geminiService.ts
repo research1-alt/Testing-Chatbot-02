@@ -43,39 +43,34 @@ export async function getChatbotResponse(
   try {
     const ai = new GoogleGenAI({ apiKey });
     
-    const systemInstruction = `CRITICAL: YOUR ENTIRE RESPONSE MUST BE IN THE ${targetLanguageName.toUpperCase()} LANGUAGE. 
-DO NOT USE ENGLISH EXCEPT FOR TECHNICAL KEYWORDS LIKE "MCU", "Pin", "Relay", "KSI", "V", "A", "CAN", "PCAN".
+    const systemInstruction = `CRITICAL OPERATIONAL PROTOCOL:
+1. RESPONSE LANGUAGE: YOU MUST RESPOND EXCLUSIVELY IN ${targetLanguageName.toUpperCase()}.
+2. STEP-BY-STEP FORMATTING: FOR ALL TECHNICAL PROCEDURES, DIAGNOSTICS, OR TROUBLESHOOTING, YOU MUST USE THE TAGS [STEP 1], [STEP 2], [STEP 3], ETC. DO NOT USE STANDARD BULLET POINTS OR NUMBERED LISTS (1., 2.) FOR PROCEDURES. 
+   - CORRECT: "[STEP 1] Check voltage..."
+   - INCORRECT: "1. Check voltage..."
+3. PERSONA: You are "OSM Mentor", an expert technical AI for Omega Seiki Mobility.
+4. INITIAL SELECTION: If the user provides a Power Train name (e.g. "Matel Power Train (12V)"), ONLY confirm readiness. "System selected: [Name]. I am ready for your query."
 
-You are "OSM Mentor"—a high-precision technical intelligence for Omega Seiki Mobility service technicians.
+DATA ACCESS:
+- POWER TRAINS: Matel (12V), Virya Gen 1 Old (48V), Virya Gen 1 AIS 156, Virya Gen 2.
+- ERROR CODES: Full library Err-01 to Err-60 with troubleshooting steps.
+- HARDWARE: Battery specs (Exicom, Exponent, Clean), CAN termination logic, Cluster types.
 
-YOU HAVE ACCESS TO MULTIPLE TECHNICAL MODULES:
-1. **POWER TRAIN SPECIFICS**: Matel (12V), Virya Gen 1 Old (48V), Virya Gen 1 AIS 156 (12V Aux), Virya Gen 2 (Advanced).
-2. **MASTER ERROR DIAGNOSTICS**: Detailed Err-01 to Err-60 definitions and troubleshooting steps.
-3. **HARDWARE & BATTERY SPECS**: Detailed info on Exicom, Exponent, and Clean batteries, CAN termination, and Sloki/Virya clusters.
-4. **TOOLS**: Step-by-step PCAN Tool process.
+STRICT FORMATTING RULE: Every single procedural instruction must begin with [STEP X]. This is mandatory for the UI to render correctly.`;
 
-STRICT OPERATIONAL RULES:
-1. **INITIAL SELECTION CONFIRMATION**: If the user selects a Power Train system from the initial list, ONLY confirm that you have selected that module and are ready to help. DO NOT provide technical info yet.
-2. **STEP-BY-STEP FORMATTING**: For all troubleshooting or technical instructions, use the [STEP 1], [STEP 2] format.
-3. **TECHNICAL ACCURACY**: Use the specific battery and hardware specs (e.g., Exicom vs Exponent) when the user mentions a battery make. Use the Master Error list for any "Err-X" queries.
-4. **LANGUAGE**: Respond ONLY in ${targetLanguageName}. Even the 'answer' field in JSON must be translated.
+    const fullPrompt = `TARGET LANGUAGE: ${targetLanguageName}
 
-JSON OUTPUT: Return valid JSON with 'answer', 'suggestions', and 'isUnclear'.`;
-
-    const fullPrompt = `LANGUAGE TO USE: ${targetLanguageName}
-    
-KNOWLEDGE BASE:
+KNOWLEDGE BASE CONTEXT:
 ${context || "No context provided."}
 
-HISTORY:
+CONVERSATION HISTORY:
 ${chatHistory}
 
-USER QUERY: "${query}"
+TECHNICIAN QUERY: "${query}"
 
-REMINDER: 
-- Respond ONLY in ${targetLanguageName}.
-- Use [STEP X] for instructions.
-- If just a system selection, confirm and wait.`;
+MANDATORY INSTRUCTION: 
+If the query requires a multi-step solution or troubleshooting guide, you MUST format it using [STEP 1], [STEP 2], etc.
+Respond ONLY in ${targetLanguageName}.`;
   
     const result = await ai.models.generateContent({
         model: 'gemini-3-flash-preview', 
@@ -83,13 +78,22 @@ REMINDER:
         config: {
             systemInstruction,
             temperature: 0.1,
+            topP: 0.8,
+            topK: 40,
             seed: 42,
             responseMimeType: "application/json",
             responseSchema: {
                 type: Type.OBJECT,
                 properties: {
-                    answer: { type: Type.STRING },
-                    suggestions: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    answer: { 
+                        type: Type.STRING, 
+                        description: `The detailed response in ${targetLanguageName}. Procedures MUST use [STEP 1], [STEP 2] markers.` 
+                    },
+                    suggestions: { 
+                        type: Type.ARRAY, 
+                        items: { type: Type.STRING },
+                        description: `Follow-up suggestions in ${targetLanguageName}.`
+                    },
                     isUnclear: { type: Type.BOOLEAN }
                 },
                 required: ["answer", "suggestions", "isUnclear"]
@@ -108,7 +112,7 @@ REMINDER:
   } catch (error: any) {
     console.error("OSM AI Failure:", error);
     return {
-        answer: "Processing error. Please try again.",
+        answer: "System Error. Please verify connection.",
         suggestions: ["Retry"],
         isUnclear: true
     };
