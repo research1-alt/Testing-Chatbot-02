@@ -1155,6 +1155,7 @@ const hardwareSpecsContent = `
 - Nominal Voltage:  48V 
 - BMS Make - RTCXFC Industries Pvt Ltd 
 
+
 ## 2. CAN Bus Termination Logic
 - **120 Ohm Termination:** Available in Cluster and MCU.
 - **60 Ohm Termination:** Expected reading when all components (Parallel) are connected.
