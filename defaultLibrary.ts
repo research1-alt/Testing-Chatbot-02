@@ -1115,7 +1115,7 @@ const hardwareSpecsContent = `
 # OSM BATTERY & HARDWARE SPECIFICATIONS
 
 ## 1. Battery Make & Specifications
-### Exicom Battery
+### Exicom Battery Specification
 - Make & Trade Name - Exicom Energy Systems Pvt. Ltd.
 - Model No - 2040506
 - Weight - 90 KG
@@ -1130,7 +1130,7 @@ const hardwareSpecsContent = `
 
 
 
-### Exponent Battery
+### Exponent Battery Specification
 - Make & Trade Name - Exponent Energy E- Pack
 - Model No - E-Pack 5188 - TG1
 - Weight - 104 KG
@@ -1144,7 +1144,7 @@ const hardwareSpecsContent = `
 
 
 
-### Clean Battery
+### Clean Battery Specification
 - Make & Trade Name - RTCXFC Industries Pvt Ltd 
 - Model No - FLO 150 
 - Weight - 120 KG
